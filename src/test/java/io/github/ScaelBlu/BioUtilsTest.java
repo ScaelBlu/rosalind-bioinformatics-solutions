@@ -2,6 +2,8 @@ package io.github.ScaelBlu;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,5 +28,15 @@ class BioUtilsTest {
     void testReverseComplementingDna(@InputFile("/03-reverse-complementing-dna.txt") String dna,
                                 @InputFile("/03-expected.txt") String complementer) {
         assertEquals(complementer, BioUtils.reverseComplementerOf(dna));
+    }
+
+    //Excercise 4: Rabbits and Recurrence Relations
+    @ParameterizedTest
+    @CsvFileSource(
+            resources = "/04-recurrent-population-growth.txt",
+            delimiterString = " "
+    )
+    void testCalculatingPopulationAfterMonths(int months, int reproductionRate, long expected) {
+        assertEquals(expected, BioUtils.calculatePopulationAfterMonths(months, reproductionRate));
     }
 }

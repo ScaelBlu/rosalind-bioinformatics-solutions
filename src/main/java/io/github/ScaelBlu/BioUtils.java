@@ -67,4 +67,24 @@ public class BioUtils {
         }
         return complementer.toString();
     }
+
+    //Excercise 4: Rabbits and Recurrence Relations
+    /**
+     * Calculates the population in pairs. The individuals are immortal and each pair becomes sexually mature after one
+     * month. Every mature pair produces male and female offspring according to the reproduction rate. The population starts
+     * with one immature pair.
+     * @param months the growing period in months.
+     * @param reproductionRate the produced immature offspring pairs.
+     * @return the size of the population after the given months.
+     */
+    public static long calculatePopulationAfterMonths(int months, int reproductionRate) {
+        long initialPopulation = 1;
+        long matures = 0;
+        for(int i = 1; i < months; i++) {
+            long previouslyMatures = matures;
+            matures = initialPopulation;
+            initialPopulation += previouslyMatures * reproductionRate;
+        }
+        return initialPopulation;
+    }
 }
