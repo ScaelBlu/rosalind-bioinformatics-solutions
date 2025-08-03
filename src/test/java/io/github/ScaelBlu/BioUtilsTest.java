@@ -20,4 +20,11 @@ class BioUtilsTest {
                                 @InputFile("/02-expected.txt") String rna) {
         assertEquals(rna, BioUtils.transcribeDnaToRna(dna));
     }
+
+    //Exercise 3: Complementing a Strand of DNA
+    @Test
+    void testReverseComplementingDna(@InputFile("/03-reverse-complementing-dna.txt") String dna,
+                                @InputFile("/03-expected.txt") String complementer) {
+        assertEquals(complementer, BioUtils.reverseComplementerOf(dna));
+    }
 }

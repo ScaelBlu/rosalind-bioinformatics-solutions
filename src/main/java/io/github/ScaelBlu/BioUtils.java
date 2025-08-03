@@ -44,4 +44,27 @@ public class BioUtils {
         }
         return sb.toString();
     }
+
+    //Exercise 3: Complementing a Strand of DNA
+    /**
+     * Generates the reverse complementer of the given DNA strand.
+     * @param dna a DNA string
+     * @return the reverse complementer DNA strand
+     */
+    public static String reverseComplementerOf(String dna) {
+        dna = dna.toUpperCase().strip();
+        char[] nucleotides = dna.toCharArray();
+        StringBuilder complementer = new StringBuilder();
+        for (int i = nucleotides.length - 1; i >= 0; i--) {
+            switch (nucleotides[i]) {
+                case 'A' -> complementer.append('T');
+                case 'C' -> complementer.append('G');
+                case 'G' -> complementer.append('C');
+                case 'T' -> complementer.append('A');
+                default ->
+                        throw new IllegalArgumentException("There is no such nucleotide: ".concat(Character.toString(nucleotides[i])));
+            }
+        }
+        return complementer.toString();
+    }
 }
