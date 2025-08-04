@@ -5,29 +5,30 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
-import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(InputStringResolver.class)
+@ExtendWith(InputFileResolver.class)
 class BioUtilsTest {
 
     //Exercise 1: Counting DNA Nucleotides
     @Test
-    void testCountDnaNucleotides(@InputFile("/01-nucleotide-counting.txt") String dna) {
+    void testCountDnaNucleotides(@InputFile("/01-nucleotide-counting.txt") BufferedReader dna) {
         assertEquals("198 220 196 212", BioUtils.countDnaNucleotides(dna));
     }
 
-    //Exercise 2: Transcribing DNA into RNA
+//    //Exercise 2: Transcribing DNA into RNA
     @Test
-    void testTranscribeDnaToRna(@InputFile("/02-transcribe-dna-to-rna.txt") String dna,
+    void testTranscribeDnaToRna(@InputFile("/02-transcribe-dna-to-rna.txt") BufferedReader dna,
                                 @InputFile("/02-expected.txt") String rna) {
         assertEquals(rna, BioUtils.transcribeDnaToRna(dna));
     }
 
     //Exercise 3: Complementing a Strand of DNA
     @Test
-    void testReverseComplementingDna(@InputFile("/03-reverse-complementing-dna.txt") String dna,
+    void testReverseComplementingDna(@InputFile("/03-reverse-complementing-dna.txt") BufferedReader dna,
                                 @InputFile("/03-expected.txt") String complementer) {
         assertEquals(complementer, BioUtils.reverseComplementerOf(dna));
     }
@@ -44,7 +45,8 @@ class BioUtilsTest {
 
     //Exercise 5: Computing GC Content
     @Test
-    void testGCCountCalculation(@InputFile("/05-expected.txt") String expectedOutput) {
-        assertEquals(expectedOutput, BioUtils.findHighestGcContent(Path.of("src/test/resources/05-rosalind-sample1.fasta")));
+    void testGCCountCalculation(@InputFile("/05-expected.txt") String expectedOutput,
+                                @InputFile("/05-rosalind-sample1.fasta") BufferedReader input) throws IOException {
+            assertEquals(expectedOutput, BioUtils.findHighestGcContent((input)));
     }
 }
