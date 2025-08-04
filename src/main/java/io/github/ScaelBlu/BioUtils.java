@@ -1,5 +1,12 @@
 package io.github.ScaelBlu;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class BioUtils {
 
     //Exercise 1: Counting DNA Nucleotides
@@ -9,12 +16,12 @@ public class BioUtils {
      * @return a string with the count of A, C, G, and T respectively.
      */
     public static String countDnaNucleotides(String dna) {
-        dna = dna.toUpperCase().strip();
+        final String correctDna = dna.toUpperCase().strip();
         int aCount = 0;
         int cCount = 0;
         int gCount = 0;
         int tCount = 0;
-        for(char nucleotide : dna.toCharArray()) {
+        for(char nucleotide : correctDna.toCharArray()) {
             switch (nucleotide) {
                 case 'A' -> aCount++;
                 case 'C' -> cCount++;
@@ -33,8 +40,8 @@ public class BioUtils {
      * @return a transcribed RNA (changed T -> U)
      */
     public static String transcribeDnaToRna(String dna) {
-        String modDna = dna.toUpperCase().trim();
-        StringBuilder sb = new StringBuilder();
+        final String modDna = dna.toUpperCase().trim();
+        final StringBuilder sb = new StringBuilder();
         for (char nucleotide : modDna.toCharArray()) {
             if (nucleotide == 'T') {
                 sb.append('U');
@@ -52,9 +59,9 @@ public class BioUtils {
      * @return the reverse complementer DNA strand
      */
     public static String reverseComplementerOf(String dna) {
-        dna = dna.toUpperCase().strip();
-        char[] nucleotides = dna.toCharArray();
-        StringBuilder complementer = new StringBuilder();
+        String correctDna = dna.toUpperCase().strip();
+        final char[] nucleotides = correctDna.toCharArray();
+        final StringBuilder complementer = new StringBuilder();
         for (int i = nucleotides.length - 1; i >= 0; i--) {
             switch (nucleotides[i]) {
                 case 'A' -> complementer.append('T');
@@ -81,10 +88,69 @@ public class BioUtils {
         long initialPopulation = 1;
         long matures = 0;
         for(int i = 1; i < months; i++) {
-            long previouslyMatures = matures;
+            final long previouslyMatures = matures;
             matures = initialPopulation;
             initialPopulation += previouslyMatures * reproductionRate;
         }
         return initialPopulation;
     }
+
+    //Exercise 5: Computing GC Content
+    /**
+     * Finds the highest GC content among the sequences of the given FASTA file.
+     * @param fastaFile the path of the FASTA file
+     * @return the highest GC percentage with its label
+     */
+    public static String findHighestGcContent(Path fastaFile) {
+        String line;
+        String currentLabel = null;
+        StringBuilder currentSequence = new StringBuilder();
+        GcContent highest = new GcContent(null, BigDecimal.ZERO);
+        try (BufferedReader reader = Files.newBufferedReader(fastaFile)) {
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith(">")) {
+                    if (currentLabel != null) {
+                        highest = compareGcContent(currentLabel, currentSequence, highest);
+                    }
+                    currentLabel = line.substring(1);
+                    currentSequence = new StringBuilder(line);
+                } else {
+                    currentSequence.append(line.toUpperCase().strip());
+                }
+            }
+            highest = compareGcContent(currentLabel, currentSequence, highest);
+        } catch (IOException ioe) {
+            throw new IllegalStateException("Can not read file: ".concat(fastaFile.toString()), ioe);
+        }
+        return String.format("%s%n%s", highest.label(), highest.percentage());
+    }
+
+    /**
+     * A container record for the sequence label and its GC percentage.
+     * @param label the label of the sequence.
+     * @param percentage the percentage of the sequence.
+     */
+    private record GcContent(String label, BigDecimal percentage) {}
+
+    /**
+     * Calculates the GC content of the current sequence and compares it to the highest.
+     * @param currentLabel the label of the actual sequence.
+     * @param currentSequence the sequence being processed.
+     * @param highest the record holding the highest GC content found so far.
+     * @return the record with higher GC content.
+     */
+    private static GcContent compareGcContent(String currentLabel, StringBuilder currentSequence, GcContent highest) {
+        final BigDecimal nucleotideCount = new BigDecimal(currentSequence.length());
+        final long gcCount = currentSequence.chars()
+                .filter(nucleotide -> nucleotide == 'G' || nucleotide == 'C')
+                .count();
+        final BigDecimal actualGcContent = new BigDecimal(gcCount)
+                .multiply(new BigDecimal(100))
+                .divide(nucleotideCount, 6, RoundingMode.HALF_UP);
+        if (actualGcContent.compareTo(highest.percentage()) > 0) {
+            return new GcContent(currentLabel, actualGcContent);
+        }
+        return highest;
+    }
+
 }

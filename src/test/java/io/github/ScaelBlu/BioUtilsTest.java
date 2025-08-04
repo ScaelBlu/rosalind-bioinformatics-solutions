@@ -5,6 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(InputStringResolver.class)
@@ -38,5 +40,11 @@ class BioUtilsTest {
     )
     void testCalculatingPopulationAfterMonths(int months, int reproductionRate, long expected) {
         assertEquals(expected, BioUtils.calculatePopulationAfterMonths(months, reproductionRate));
+    }
+
+    //Exercise 5: Computing GC Content
+    @Test
+    void testGCCountCalculation(@InputFile("/05-expected.txt") String expectedOutput) {
+        assertEquals(expectedOutput, BioUtils.findHighestGcContent(Path.of("src/test/resources/05-rosalind-sample1.fasta")));
     }
 }
