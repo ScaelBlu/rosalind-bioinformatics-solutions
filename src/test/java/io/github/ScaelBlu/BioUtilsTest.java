@@ -19,7 +19,7 @@ class BioUtilsTest {
         assertEquals("198 220 196 212", BioUtils.countDnaNucleotides(dna));
     }
 
-//    //Exercise 2: Transcribing DNA into RNA
+    //Exercise 2: Transcribing DNA into RNA
     @Test
     void testTranscribeDnaToRna(@InputFile("/02-transcribe-dna-to-rna.txt") BufferedReader dna,
                                 @InputFile("/02-expected.txt") String rna) {
@@ -33,8 +33,8 @@ class BioUtilsTest {
         assertEquals(complementer, BioUtils.reverseComplementerOf(dna));
     }
 
-    //Excercise 4: Rabbits and Recurrence Relations
-    @ParameterizedTest
+    //Exercise 4: Rabbits and Recurrence Relations
+    @ParameterizedTest(name = "Expects {3} population with {2} reproduction rate after {1} month(s)")
     @CsvFileSource(
             resources = "/04-recurrent-population-growth.txt",
             delimiterString = " "
@@ -48,5 +48,11 @@ class BioUtilsTest {
     void testGCCountCalculation(@InputFile("/05-expected.txt") String expectedOutput,
                                 @InputFile("/05-rosalind-sample1.fasta") BufferedReader input) throws IOException {
             assertEquals(expectedOutput, BioUtils.findHighestGcContent((input)));
+    }
+
+    //Exercise 6: Counting Point Mutations
+    @Test
+    void testPointMutationCounter(@InputFile("/06-sequences-to-compare.txt") BufferedReader strands) throws IOException {
+        assertEquals(470, BioUtils.countPointMutations(strands));
     }
 }

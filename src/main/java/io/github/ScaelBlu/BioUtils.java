@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -98,6 +99,7 @@ public class BioUtils {
      * Finds the highest GC content among the sequences of the given FASTA file.
      * @param fasta the reader of the FASTA file
      * @return the highest GC percentage with its label
+     * @throws IOException if an I/O error occurs.
      */
     public static String findHighestGcContent(BufferedReader fasta) throws IOException {
         String line;
@@ -147,4 +149,29 @@ public class BioUtils {
         return highest;
     }
 
+    //Exercise 6: Counting Point Mutations
+    /**
+     * Counts the Hamming distance (the number of point mutations) between two DNA strands.
+     * @param strands reader of the two DNA strands to compare.
+     * @return the number of point mutations.
+     * @throws IOException if an I/O error occurs.
+     */
+    public static long countPointMutations(BufferedReader strands) throws IOException {
+        long hammingDistance = 0;
+        final char[] firstStrand = strands.readLine().strip().toUpperCase().toCharArray();
+        final char[] secondStrand = strands.readLine().strip().toUpperCase().toCharArray();
+        if (firstStrand.length != secondStrand.length) {
+            throw new IllegalArgumentException("Lengths must be equal.");
+        }
+        for (int i = 0; i < firstStrand.length; i++) {
+            final List<Character> allowed = List.of('A', 'T', 'C', 'G');
+            if (!allowed.contains(firstStrand[i]) || !allowed.contains(secondStrand[i])) {
+                throw new IllegalArgumentException("Invalid nucleotide.");
+            }
+            if (firstStrand[i] != secondStrand[i]) {
+                hammingDistance++;
+            }
+        }
+        return hammingDistance;
+    }
 }
