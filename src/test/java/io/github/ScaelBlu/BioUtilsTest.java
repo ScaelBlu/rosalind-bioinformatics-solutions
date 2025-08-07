@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,4 +57,15 @@ class BioUtilsTest {
     void testPointMutationCounter(@InputFile("/06-sequences-to-compare.txt") BufferedReader strands) throws IOException {
         assertEquals(470, BioUtils.countPointMutations(strands));
     }
+
+    //Exercise 7: Mendel's First Law
+    @ParameterizedTest
+    @CsvSource({
+            "2, 2, 2, 0.78333",
+            "19, 21, 26, 0.69674"
+    })
+    void testCalculateDominantPhenotypeProbability(int AA, int Aa, int aa, BigDecimal expected) {
+        assertEquals(expected, BioUtils.calculateDominantPhenotypeProbability(AA, Aa, aa, 5));
+    }
+
 }

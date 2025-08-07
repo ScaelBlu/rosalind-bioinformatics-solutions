@@ -174,4 +174,46 @@ public class BioUtils {
         }
         return hammingDistance;
     }
+
+    //Exercise 7: Mendel's First Law
+    /**
+     * Calculates the probability of offspring having a dominant phenotype in a conceptual population where the numbers
+     * of homozygous dominant, heterozygous, and homozygous recessive individuals are given. Every individual is able to
+     * mate with any other. The phenotype is determined by a single gene and follows mendelian inheritance.
+     * @param homoDominants the number of homozygous dominant individuals.
+     * @param heterozygous the number of heterozygous individuals.
+     * @param homoRecessives the number of homozygous recessive individuals.
+     * @param scale the scale of the result (number of decimal places).
+     * @return the probability of an offspring having a dominant phenotype.
+     */
+    public static BigDecimal calculateDominantPhenotypeProbability(long homoDominants, long heterozygous, long homoRecessives, int scale) {
+        if (homoDominants < 0 || heterozygous < 0 || homoRecessives < 0 || scale < 0) {
+            throw new IllegalArgumentException("Arguments must be non-negative integers!");
+        }
+
+        final long totalIndividuals = homoDominants + heterozygous + homoRecessives;
+        if (totalIndividuals < 2) {
+            return BigDecimal.ZERO;
+        }
+
+        final BigDecimal totalPairs =  new BigDecimal(MathUtils.combination(totalIndividuals, 2));
+
+        final BigDecimal hetHetPairs = new BigDecimal(MathUtils.combination(heterozygous, 2));
+        final BigDecimal recessivesFromHetHet = hetHetPairs.multiply(new BigDecimal("0.25"));
+
+        final BigDecimal recHetPairs = BigDecimal.valueOf(homoRecessives).multiply(BigDecimal.valueOf(heterozygous));
+        final BigDecimal recessivesFromRecHet = recHetPairs.multiply(new BigDecimal("0.5"));
+
+        final BigDecimal recRecPairs = new BigDecimal(MathUtils.combination(homoRecessives, 2));
+
+        final BigDecimal totalRecessiveOffsprings = recessivesFromHetHet
+                .add(recessivesFromRecHet)
+                .add(recRecPairs);
+        final BigDecimal totalDominantOffsprings = totalPairs
+                .subtract(totalRecessiveOffsprings);
+
+        return totalDominantOffsprings.divide(totalPairs, scale, RoundingMode.HALF_UP);
+    }
+
+
 }
