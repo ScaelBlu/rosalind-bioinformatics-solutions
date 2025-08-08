@@ -68,4 +68,11 @@ class BioUtilsTest {
         assertEquals(expected, BioUtils.calculateDominantPhenotypeProbability(AA, Aa, aa, 5));
     }
 
+    //Exercise 8: Translating RNA into Protein
+    @Test
+    void testRnaTranslation(@InputFile("/08-mRNA-to-translate.txt") BufferedReader mRNA,
+                            @InputFile("/08-protein-sequence.txt") String expected) {
+        assertEquals(expected, BioUtils.mRnaTranslator(mRNA, OpenReadingFrame.FIRST, GeneticCodeType.UNIVERSAL, false));
+    }
+
 }

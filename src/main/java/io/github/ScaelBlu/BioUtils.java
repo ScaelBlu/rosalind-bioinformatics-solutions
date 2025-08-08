@@ -4,12 +4,22 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class BioUtils {
+
+    public static final char[] RIBONUCLEOTIDES = {'U', 'A', 'G', 'C'};
+
+    public static final char[] D_RIBONUCLEOTIDES = {'T', 'A', 'G', 'C'};
+
+    static {
+        Arrays.sort(RIBONUCLEOTIDES);
+        Arrays.sort(D_RIBONUCLEOTIDES);
+    }
 
     //Exercise 1: Counting DNA Nucleotides
     /**
@@ -21,7 +31,7 @@ public class BioUtils {
         final Map<Character, Long> nucleotides = dna.lines()
                 .flatMap(line -> line.strip().toUpperCase().chars()
                         .peek(n -> {
-                            if (n != 'A' && n != 'C' && n != 'G' && n != 'T') {
+                            if (Arrays.binarySearch(D_RIBONUCLEOTIDES, (char) n) < 0) {
                                 throw new IllegalArgumentException("Invalid nucleotide: ".concat(String.valueOf((char) n)));
                             }})
                         .mapToObj(i -> (char) i))
@@ -36,7 +46,7 @@ public class BioUtils {
 
     //Exercise 2: Transcribing DNA into RNA
     /**
-     * Transcribes the given DNA into RNA (within one strand only!).
+     * Transcribes the given DNA sense strand into RNA (not a real transcription!).
      * @param dna a DNA string reader.
      * @return a transcribed RNA (changed T -> U).
      */
@@ -164,8 +174,8 @@ public class BioUtils {
             throw new IllegalArgumentException("Lengths must be equal.");
         }
         for (int i = 0; i < firstStrand.length; i++) {
-            final List<Character> allowed = List.of('A', 'T', 'C', 'G');
-            if (!allowed.contains(firstStrand[i]) || !allowed.contains(secondStrand[i])) {
+            if (Arrays.binarySearch(D_RIBONUCLEOTIDES, firstStrand[i]) < 0 ||
+                    Arrays.binarySearch(D_RIBONUCLEOTIDES, secondStrand[i]) < 0) {
                 throw new IllegalArgumentException("Invalid nucleotide.");
             }
             if (firstStrand[i] != secondStrand[i]) {
@@ -215,5 +225,60 @@ public class BioUtils {
         return totalDominantOffsprings.divide(totalPairs, scale, RoundingMode.HALF_UP);
     }
 
+    //Exercise 8: Translating RNA into Protein
 
+    /**
+     * Translates an mRNA sequence into protein sequence.
+     * @param mRna mRna string to translate.
+     * @param frame the reading frame of translation. Determines the offset of the codon triplets.
+     * @param codeType determines the rules of codon-amino acid assignment.
+     * @param terminateAtStop translation stops at stop codons if true.
+     * @return a translated protein string.
+     */
+    public static String mRnaTranslator(BufferedReader mRna, OpenReadingFrame frame,
+                                        GeneticCodeType codeType, boolean terminateAtStop) {
+        final Map<String, TranslationUnit> codonTable = getCodonTable(codeType);
+        System.out.println(codonTable);
+        final StringBuffer codonBuilder = new StringBuffer();
+        return mRna.lines()
+                .flatMapToInt(line -> line.strip().toUpperCase().chars())
+                .peek(n -> {
+                    if (Arrays.binarySearch(RIBONUCLEOTIDES, (char) n) < 0) {
+                        throw new IllegalArgumentException("Invalid nucleotide.");
+                    }
+                })
+                .skip(frame.getOffset())
+                .mapToObj(n -> {
+                    if (codonBuilder.length() < 3) {
+                        codonBuilder.append((char) n);
+                        return "";
+                    }
+                    final String codon = codonBuilder.toString();
+                    codonBuilder.setLength(0);
+                    codonBuilder.append((char) n);
+                    return codon;
+                })
+                .filter(s -> !s.isEmpty())
+                .map(codon -> codonTable.get(codon).getSymbol())
+                .takeWhile(symbol -> !terminateAtStop || symbol.equals("*"))
+                .collect(Collectors.joining());
+    }
+
+    /**
+     * Generates the codon table for codon-amino acid translation.
+     * @param codeType the type of the genetic code for the assignment rules.
+     * @return a Map of the 64 possible codon.
+     */
+    public static Map<String, TranslationUnit> getCodonTable(GeneticCodeType codeType) {
+        final Map<String, TranslationUnit> codonTable = new HashMap<>();
+        for (char n1 : RIBONUCLEOTIDES) {
+            for (char n2 : RIBONUCLEOTIDES) {
+                for (char n3 : RIBONUCLEOTIDES) {
+                    String codon = new String(new char[]{n1, n2, n3});
+                    codonTable.put(codon, TranslationUnit.of(codon, codeType));
+                }
+            }
+        }
+        return codonTable;
+    }
 }
