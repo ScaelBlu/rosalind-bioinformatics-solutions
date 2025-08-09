@@ -4,9 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -226,7 +224,6 @@ public class BioUtils {
     }
 
     //Exercise 8: Translating RNA into Protein
-
     /**
      * Translates an mRNA sequence into protein sequence.
      * @param mRna mRna string to translate.
@@ -280,5 +277,35 @@ public class BioUtils {
             }
         }
         return codonTable;
+    }
+
+    //Exercise 9: Finding a Motif in DNA
+    /**
+     * Finds all occurrence of the given motif in the given DNA sequence.
+     * @param dnaSequence a DNA sequence to examine.
+     * @param motif a DNA motif to find.
+     * @return a list with the number (not the index!) of the first character of the found motifs.
+     */
+    public static List<Integer> findAllMotifs(String dnaSequence, String motif) {
+        final List<Integer> indices = new ArrayList<>();
+        int index = -1;
+        while (index != 0) {
+            index = dnaSequence.indexOf(motif, index);
+            indices.add(++index);
+        }
+        indices.removeLast();
+        return indices;
+    }
+
+    /**
+     * Finds all occurrence of a motif in a DNA sequence from file. The first line must contain the sequence.
+     * @param input an input file with the sequence and the motif in separate lines.
+     * @return a list with the number (not the index!) of the first character of the found motifs.
+     * @throws IOException if an I/O error occurs.
+     */
+    public static List<Integer> findAllMotifs(BufferedReader input) throws IOException {
+        final String sequence = input.readLine();
+        final String motif = input.readLine();
+        return findAllMotifs(sequence, motif);
     }
 }

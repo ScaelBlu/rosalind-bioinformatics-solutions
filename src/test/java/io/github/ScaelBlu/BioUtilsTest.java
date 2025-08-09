@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -75,4 +76,11 @@ class BioUtilsTest {
         assertEquals(expected, BioUtils.mRnaTranslator(mRNA, OpenReadingFrame.FIRST, GeneticCodeType.UNIVERSAL, false));
     }
 
+    //Exercise 9: Finding a Motif in DNA
+    @Test
+    void testMotifFinder(@InputFile("/09-sequence-and-motif-to-find.txt") BufferedReader input) throws IOException {
+        assertEquals(List.of(31, 60, 131, 179, 300, 317, 338, 345, 352, 359, 409, 527, 631, 649, 656, 741, 748, 806, 836, 843, 859, 880),
+                BioUtils.findAllMotifs(input));
+        assertEquals(List.of(2, 4, 10), BioUtils.findAllMotifs("GATATATGCATATACTT", "ATAT"));
+    }
 }
