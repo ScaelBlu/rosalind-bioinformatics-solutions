@@ -10,14 +10,9 @@ import java.util.stream.Collectors;
 
 public class BioUtils {
 
-    public static final char[] RIBONUCLEOTIDES = {'U', 'A', 'G', 'C'};
+    public static final Set<Character> RIBONUCLEOTIDES = Set.of('U', 'A', 'G', 'C');
 
-    public static final char[] D_RIBONUCLEOTIDES = {'T', 'A', 'G', 'C'};
-
-    static {
-        Arrays.sort(RIBONUCLEOTIDES);
-        Arrays.sort(D_RIBONUCLEOTIDES);
-    }
+    public static final Set<Character> D_RIBONUCLEOTIDES = Set.of('T', 'A', 'G', 'C');
 
     //Exercise 1: Counting DNA Nucleotides
     /**
@@ -28,10 +23,12 @@ public class BioUtils {
     public static String countDnaNucleotides(BufferedReader dna) {
         final Map<Character, Long> nucleotides = dna.lines()
                 .flatMap(line -> line.strip().toUpperCase().chars()
-                        .peek(n -> {
-                            if (Arrays.binarySearch(D_RIBONUCLEOTIDES, (char) n) < 0) {
+                        .filter(n -> {
+                            if (!D_RIBONUCLEOTIDES.contains((char) n)) {
                                 throw new IllegalArgumentException("Invalid nucleotide: ".concat(String.valueOf((char) n)));
-                            }})
+                            }
+                            return true;
+                        })
                         .mapToObj(i -> (char) i))
                 .collect(Collectors.groupingBy(c -> c, Collectors.counting()));
 
@@ -172,9 +169,8 @@ public class BioUtils {
             throw new IllegalArgumentException("Lengths must be equal.");
         }
         for (int i = 0; i < firstStrand.length; i++) {
-            if (Arrays.binarySearch(D_RIBONUCLEOTIDES, firstStrand[i]) < 0 ||
-                    Arrays.binarySearch(D_RIBONUCLEOTIDES, secondStrand[i]) < 0) {
-                throw new IllegalArgumentException("Invalid nucleotide.");
+            if (!D_RIBONUCLEOTIDES.contains(firstStrand[i]) || !D_RIBONUCLEOTIDES.contains(secondStrand[i])) {
+                throw new IllegalArgumentException("Invalid nucleotide at pos: %d".formatted(i));
             }
             if (firstStrand[i] != secondStrand[i]) {
                 hammingDistance++;
@@ -239,10 +235,11 @@ public class BioUtils {
         final StringBuffer codonBuilder = new StringBuffer();
         return mRna.lines()
                 .flatMapToInt(line -> line.strip().toUpperCase().chars())
-                .peek(n -> {
-                    if (Arrays.binarySearch(RIBONUCLEOTIDES, (char) n) < 0) {
-                        throw new IllegalArgumentException("Invalid nucleotide.");
+                .filter(n -> {
+                    if (!RIBONUCLEOTIDES.contains((char) n)) {
+                        throw new IllegalArgumentException("Invalid nucleotide: %s.".formatted((char) n));
                     }
+                    return true;
                 })
                 .skip(frame.getOffset())
                 .mapToObj(n -> {
@@ -307,5 +304,112 @@ public class BioUtils {
         final String sequence = input.readLine();
         final String motif = input.readLine();
         return findAllMotifs(sequence, motif);
+    }
+
+    //Exercise 10: Consensus and Profile
+    /**
+     * Generates the consensus sequence based on the same length sequences of a given FASTA file. It creates a position
+     * matrix as well which appears in the output. The matrix contains the counts of a nucleotide in a position in the
+     * sequences. If more consensus motifs are possible, any of them may be returned.
+     * @param fasta the FASTA file with same length DNA sequences.
+     * @return a possible consensus motif and the underlying position matrix.
+     * @throws IOException if an I/O error occurs.
+     */
+    public static String createConsensusSequence(BufferedReader fasta) throws IOException {
+        final Map<Character, int[]> posMatrix = new HashMap<>();
+        String line;
+        int expectedLength = -1;
+        final StringBuilder sequence = new StringBuilder();
+        while ((line = fasta.readLine()) != null) {
+            if (line.startsWith(">")) {
+                if (!sequence.isEmpty()) {
+                    expectedLength = validateLength(expectedLength, sequence);
+                    processSequence(sequence, posMatrix);
+                }
+                sequence.setLength(0);
+            } else {
+                sequence.append(line.strip());
+            }
+        }
+        if (!sequence.isEmpty()) {
+            expectedLength = validateLength(expectedLength, sequence);
+            processSequence(sequence, posMatrix);
+        }
+
+        return processPositionMatrix(posMatrix, expectedLength);
+    }
+
+    /**
+     * This method checks the length of a single FASTA sequence and compares it with the expected nucleotide count. The
+     * FASTA file must contain same length sequences.
+     * @param expectedLength the expected length of the sequences. It is equal to the length of the first sequence.
+     * @param sequence the actual sequence to check.
+     * @return the length of the first sequence to set it in the caller method.
+     */
+    private static int validateLength(int expectedLength, StringBuilder sequence) {
+        if (expectedLength == -1) {
+            return sequence.length();
+        }
+        if (sequence.length() != expectedLength) {
+            throw new IllegalArgumentException("Sequence must be the same length.");
+        }
+        return expectedLength;
+    }
+
+    /**
+     * Updates the position matrix by counting the nucleotides in each position.
+     * @param sequence the actual DNA sequence to process.
+     * @param posMatrix the position matrix with nucleotide keys to update.
+     */
+    private static void processSequence(StringBuilder sequence, Map<Character, int[]> posMatrix) {
+        final char[] nucleotides = sequence.toString().toUpperCase().toCharArray();
+        for (int i = 0; i < nucleotides.length; i++) {
+            if (!D_RIBONUCLEOTIDES.contains(nucleotides[i])) {
+                throw new IllegalArgumentException("Invalid nucleotide: %s".formatted(nucleotides[i]));
+            }
+            int[] positions = posMatrix.computeIfAbsent(nucleotides[i], _ -> new int[nucleotides.length]);
+            positions[i]++;
+        }
+    }
+
+    /**
+     * Creates the correct output based on the position matrix.
+     * @param matrix the matrix with the counts of nucleotides in each position.
+     * @param rowLength the length of a row of the matrix (the count of positions).
+     * @return a possible consensus sequence and the underlying position matrix.
+     */
+    private static String processPositionMatrix(Map<Character, int[]> matrix, int rowLength) {
+        final StringBuilder result = new StringBuilder(createConsensusMotif(matrix, rowLength));
+        matrix.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(nucPositions -> {
+                    result.append(nucPositions.getKey()).append(":");
+                    int[] positions = nucPositions.getValue();
+                    for (int count : positions) {
+                        result.append(" ").append(count);
+                    }
+                    result.append("\n");
+                });
+        return result.toString().strip();
+    }
+
+    /**
+     * Generates a possible consensus sequence based on the highest nucleotide count in each position.
+     * @param matrix the position matrix with the nucleotides ant their counts.
+     * @param rowLength the length of a row of the matrix (the count of positions).
+     * @return a possible consensus DNA string.
+     */
+    private static String createConsensusMotif(Map<Character,int[]> matrix, int rowLength) {
+        final StringBuilder consensusMotif = new StringBuilder();
+        for (int i=0; i<rowLength; i++) {
+            Map.Entry<Character, int[]> highestOccurrence = null;
+            for (Map.Entry<Character, int[]> e : matrix.entrySet()) {
+                if (highestOccurrence == null || e.getValue()[i] > highestOccurrence.getValue()[i]) {
+                    highestOccurrence = e;
+                }
+            }
+            consensusMotif.append(highestOccurrence.getKey());
+        }
+        return consensusMotif.append("\n").toString();
     }
 }

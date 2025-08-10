@@ -12,7 +12,7 @@ public interface TranslationUnit {
 
     static TranslationUnit of(String codon, GeneticCodeType codeType) {
         for (char nucleotide : codon.toCharArray()) {
-            if (Arrays.binarySearch(RIBONUCLEOTIDES, nucleotide) < 0) {
+            if (!RIBONUCLEOTIDES.contains(nucleotide)) {
                 throw new IllegalArgumentException("Invalid codon: %s.".formatted(codon));
             }
         }

@@ -83,4 +83,10 @@ class BioUtilsTest {
                 BioUtils.findAllMotifs(input));
         assertEquals(List.of(2, 4, 10), BioUtils.findAllMotifs("GATATATGCATATACTT", "ATAT"));
     }
+
+    @Test
+    void testtest(@InputFile("/10-fasta-sequences.fasta") BufferedReader input,
+                  @InputFile("/10-expected-output.txt") String expected) throws IOException {
+        assertEquals(expected, BioUtils.createConsensusSequence(input));
+    }
 }
